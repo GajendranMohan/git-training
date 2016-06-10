@@ -1,0 +1,222 @@
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Life</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+</head>
+<body style="background-color: F2F1EF">
+	<div style="font-size: 30px; font-family: Cursive">
+		<center>
+			<h1 style="color: 52B3D9">
+				<Strong> Express your thoughts</strong>
+			</h1>
+		</center>
+	</div>
+	
+	<div id="userupdate" style="margin-top: 75px;height:500px;overflow: scroll" class="col-md-3">
+	<ul></ul>
+	<div><button id="fetchAllFeeds">click me to see all the feeds</button></div>
+	</div>
+	<div style="width:0.5px;background-color:52B3D9;height:500px;position:absolute;top:75px;left:345px">&nbsp;</div>
+	
+	<div style="margin-top: 75px" class="col-md-9">
+		<textarea name="Name" id="textarea"
+			style="width: 650px; resize: none"
+			placeholder="Enter The Message Here..."></textarea>
+		<button id="update-btn" style="position: absolute; font-size: 26px">Update</button>
+	</div><br>
+	<br>
+	<br>
+	<div id="display"
+		style="margin-left: 355px; margin-top: 100px; width: 750px; height: 400px; padding: 10px; border: 5px dashed gray; overflow: scroll">
+
+	</div>
+	<div>
+	<%String username=request.getParameter("nme"); %>
+	<span id="spanid1"><%=username%></span>
+	<%String usermail=request.getParameter("mail");%>
+	<%String s = usermail;
+ 	char[] tmp = s.toCharArray();
+ 	char[] c = new char[tmp.length - 2];
+ 	for (int i = 0; i <= c.length - 2; i++) {
+ 		c[i] = tmp[i]; 
+ 	}
+ 	char[] c1=new char[c.length-1];
+ 	for(int i=0;i<c.length-2;i++)
+ 	{
+ 		c1[i]=c[i];
+ 	}
+ 	%>
+	<span id="spanid2"><%=c1 %> </span>
+	</div>
+	
+<script>
+
+<!-- simultaneous ajax call for fetching the data as well as the logged in user details on document loading -->
+
+	$(document).ready(function() {
+		$.ajax({
+			type : "GET",
+			url : "/Fetch",
+			success : function(text) {
+				
+					 var splitingTheResponse = text.split(",");
+					var concatenatingVariable = "";
+					ParsingResponse=$.parseJSON(splitingTheResponse);
+					for (i = 0; i < ParsingResponse.length; i++) {
+						concatenatingVariable += "<div><div>" + ParsingResponse[i].message + "</div> <div>"+ParsingResponse[i].userMail +"   "+ ParsingResponse[i].date +"</div></div><p></p>";
+					}
+					$("#display").html(concatenatingVariable);
+
+				$.ajax({
+					type : "GET",
+					url : "/fetchFromLoginTable",
+					success : function(response) {
+						console.log(response);
+						console.log($.parseJSON(response));
+						 response=$.parseJSON(response);
+ 						for(var i=0;i<response.length;i++){
+ 							console.log(response[i].name +" "+ i);
+ 						response[i].name;
+ 						response[i].email;
+ 						//console.log(resp[i])
+ 						$("#userupdate ul").append('<li class="userMailClick" style="display:block">'+response[i].email+'</li>' );
+ 						
+ 						}
+ 					    $("#spanid1").hide();
+ 						$("#spanid2").hide();
+						
+					}
+
+				});
+			}
+
+		});
+		
+		<!-- update buuton to store the entered data in to the datastore-->
+
+		$("#update-btn").click(function() {
+			var passingData=$("#textarea").val();
+			var passingMail=$("#spanid2").text();
+			$.ajax({
+				type : "GET",
+				url : "http://localhost:8888/storingUpdate?passingData="+passingData+"&passingMail="+passingMail,	
+				success : function(text) {
+					$.ajax({
+						type : "GET",
+						url : "/Fetch",
+						success : function(text) {
+							
+								 var splitingTheResponse = text.split(",");
+								var concatenatingVariable = "";
+								ParsingResponse=$.parseJSON(splitingTheResponse);
+								for (i = 0; i < ParsingResponse.length; i++) {
+									concatenatingVariable += "<div><div>" + ParsingResponse[i].message + "</div> <div>"+ParsingResponse[i].userMail +"   "+ ParsingResponse[i].date +"</div></div><p></p>";
+								}
+								$("#display").html(concatenatingVariable);
+						}
+
+					});
+				}
+
+			}); 
+
+			var prevMsg = $("#display").html();
+
+			$("#display").html($("#textarea").val() + "<br>" + prevMsg);
+			$("#textarea").val("");
+		});
+		
+		<!-- clicking the logged in user to fetch there feeds alone-->
+		
+		$(document).on("click",".userMailClick",function() {
+			var fetchId =$(this).text();
+			var displayingVariable ="";
+			$.ajax({
+				type :"GET",
+				url :"http://localhost:8888/fetchOnlyRespectiveText?passingFetchedId="+fetchId,
+				success : function(response){	
+					parsingResponse=$.parseJSON(response);
+					for (i = 0; i < parsingResponse.length; i++) {
+						displayingVariable +="<div>"+ parsingResponse[i].message + " :- " +parsingResponse[i].date +"</div><p></p>";
+					}
+					
+					$("#display").html(displayingVariable);
+					
+					console.log(fetchId);
+				}
+			}); 
+        });
+		
+		<!-- button click part to display all the feeds entered by the user-->
+		$("#fetchAllFeeds").click(function() {
+			$.ajax({
+				type : "GET",
+				url : "/Fetch",
+				success : function(text) {
+					
+						 var splitingTheResponse = text.split(",");
+						var concatenatingVariable = "";
+						ParsingResponse=$.parseJSON(splitingTheResponse);
+						for (i = 0; i < ParsingResponse.length; i++) {
+							concatenatingVariable +="<div><div>" + ParsingResponse[i].message + "</div> <div>"+ParsingResponse[i].userMail +"   "+ ParsingResponse[i].date +"</div></div><p></p>";
+						}
+						$("#display").html(concatenatingVariable);
+				}
+			});
+		});
+		
+		<!-- auto refresh for fetching the logged in user it will invoke evry 10seconds -->
+		setInterval(function(){
+			$.ajax({
+				type : "GET",
+				url : "/fetchFromLoginTable",
+				success : function(response) {
+					var originalResponse=response;
+					 response=$.parseJSON(originalResponse);
+					
+					 
+					 if(response.length  != $(".userMailClick").length){
+						for(var i=0;i<response.length;i++){
+							console.log(response[i].name +" "+ i);
+						response[i].name;
+						response[i].email;
+						var comparingResponse=response[i].email;
+					if	(!(originalResponse==comparingResponse)){
+						$("#userupdate ul").append('<li class="userMailClick" style="display:block">'+response[i].email+'</li>' );
+					}
+						}
+					 }
+					    $("#spanid1").hide();
+						$("#spanid2").hide();
+					
+				}
+
+			});
+			}, 10000)
+			
+		<!-- auto refresh for fetching the message ,it will incoke only after 3 minutes-->	
+			setInterval(function(){
+				$.ajax({
+					type : "GET",
+					url : "/Fetch",
+					success : function(text) {
+						
+							 var splitingTheResponse = text.split(",");
+							var concatenatingVariable = "";
+							ParsingResponse=$.parseJSON(splitingTheResponse);
+							for (i = 0; i < ParsingResponse.length; i++) {
+								concatenatingVariable += "<div><div>" + ParsingResponse[i].message + "</div> <div>"+ParsingResponse[i].userMail +"   "+ ParsingResponse[i].date +"</div></div><p></p>";
+							}
+							$("#display").html(concatenatingVariable);
+					}
+				});
+}, 180000)
+		
+	});
+</script>
+</body>
+</html>

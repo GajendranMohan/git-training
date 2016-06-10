@@ -1,0 +1,36 @@
+mahesh16295@gmail.com			kaavalan011
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Displaying user credentials....</title>
+</head>
+<body>
+
+	<%  
+	String strnme=request.getParameter("nme");  
+	String strmail=request.getParameter("mail");
+	out.println("welcome "+strnme+" and mail id is "+strmail);
+	%> 
+	
+	<img src="<%=request.getParameter("pic")%>" width="350" height="350">
+</body>
+</html>
+$("#btn").click(function(){
+			console.log("hai");
+			$.ajax({
+				type : "GET",
+				url : "/fetchOnlyRespectiveText?uname=" + $("#btn").val(),
+				success : function(text) {
+					
+					
+					
+					 $("#display").val(text);
+				}
+
+			});
+		});
